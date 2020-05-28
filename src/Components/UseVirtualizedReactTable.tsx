@@ -1,25 +1,28 @@
 import React from 'react';
 import styled from 'styled-components';
-import { useTable, useSortBy, Column } from 'react-table';
+import { useTable, useSortBy, Column, useBlockLayout } from 'react-table';
 import makeData , {PersonData} from './makeData';
+import { FixedSizeList } from 'react-window';
+
 
 const Styles = styled.div`
   padding: 1rem;
 
-  table {
+  .table {
+    display: inline-block;
     border-spacing: 0;
     border: 1px solid black;
 
-    tr {
+    .tr {
       :last-child {
-        td {
+        .td {
           border-bottom: 0;
         }
       }
     }
 
-    th,
-    td {
+    .th,
+    .td {
       margin: 0;
       padding: 0.5rem;
       border-bottom: 1px solid black;
@@ -33,56 +36,91 @@ const Styles = styled.div`
 `
 
 function Table({ columns, data } : any){
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = useTable({
-    columns,
-    data,
-  },
-    useSortBy
-  )
+  const defaultColumn = React.useMemo(
+    () => ({
+        width: 150,
+      }),
+      []
+    )
+
+
+    const {
+      getTableProps,
+      getTableBodyProps,
+      headerGroups,
+      rows,
+      totalColumnsWidth,
+      prepareRow,
+    } = useTable(
+      {
+        columns,
+        data,
+        defaultColumn,
+      },
+      useBlockLayout
+      ,useSortBy
+    )
+
+    const RenderRow = React.useCallback(
+      ({ index, style }) => {
+        const row = rows[index]
+        prepareRow(row)
+        return (
+          <div
+            {...row.getRowProps({
+              style,
+            })}
+            className="tr"
+          >
+            {row.cells.map(cell => {
+              return (
+                <div {...cell.getCellProps()} className="td">
+                  {cell.render('Cell')}
+                </div>
+              )
+            })}
+          </div>
+        )
+      },
+      [prepareRow, rows]
+    )
+
+   
+
   //테이블에 UI 렌더링
    // Render the UI for your table
-
    return (
-    <table {...getTableProps()}>
-      <thead>
+    <div {...getTableProps()} className="table">
+      <div>
         {headerGroups.map(headerGroup => (
-          <tr {...headerGroup.getHeaderGroupProps()}>
+          <div {...headerGroup.getHeaderGroupProps()} className="tr">
             {headerGroup.headers.map(column => (
-              //<th {...column.getHeaderProps()}>
-              <th {...column.getHeaderProps(column.getSortByToggleProps())}>
-                  {column.render('Header')}
-                  {/* Add a sort direction indicator */}
-                  <span>
+              <div {...column.getHeaderProps(column.getSortByToggleProps())} className="th">
+                {column.render('Header')}
+                <span>
                     {column.isSorted
                       ? column.isSortedDesc
                         ? ' 🔽'
                         : ' 🔼'
                       : ''}
-                 </span>
-              </th>
+                </span>
+              </div>
             ))}
-          </tr>
+          </div>
         ))}
-      </thead>
-      <tbody {...getTableBodyProps()}>
-        {rows.map((row, i) => {
-          prepareRow(row)
-          return (
-            <tr {...row.getRowProps()}>
-              {row.cells.map(cell => {
-                return <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
-              })}
-            </tr>
-          )
-        })}
-      </tbody>
-    </table>
+      </div>
+
+      <div {...getTableBodyProps()}>
+        <FixedSizeList
+          height={400}
+          itemCount={rows.length}
+          itemSize={35}
+          width={totalColumnsWidth}
+        >
+          {RenderRow}
+        </FixedSizeList>
+      </div>
+    </div>
   )
 }
 
@@ -93,6 +131,10 @@ interface Props {
 const UseReactTable :  React.FC<Props> = () => {
     const columns: Column<PersonData>[] = React.useMemo(
       () => [
+        {
+          Header: 'Row Index',
+          accessor: (row, i) => i,
+        },
         {
           Header: 'Name',
           columns: [
