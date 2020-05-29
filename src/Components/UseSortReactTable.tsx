@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { useTable, useSortBy, Column } from 'react-table';
 import makeData , {PersonData} from './makeData';
 
+import { UseGlobalFiltersInstanceProps, UseGlobalFiltersOptions, HeaderGroup, Row, IdType, FilterValue } from '../react-table-index-backup';
+
 const Styles = styled.div`
   padding: 1rem;
 

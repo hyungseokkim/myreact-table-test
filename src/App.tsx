@@ -1,14 +1,12 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
-import UseReactTable from './Components/UseSortReactTable';
 import UseVirtualizedReactTable from './Components/UseVirtualizedReactTable';
-
+import UseFilterReactTable from './Components/UseFilterReactTable2';
 
 const App = () => {
   return (
     <div className="App">
-      <UseVirtualizedReactTable/>
+      <UseFilterReactTable/>
     </div>
   );
 }
